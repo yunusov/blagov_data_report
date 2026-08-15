@@ -1,7 +1,10 @@
+import argparse
+import time
 import zipfile
 
 import pandas as pd
 import requests
+from apscheduler.schedulers.background import BackgroundScheduler
 from pandas.errors import EmptyDataError
 from tenacity import (
     retry,
@@ -18,8 +21,21 @@ logger = AppLogger().get_logger()
 REQUIRED_COLUMNS = {"order_id", "sku", "price", "qty"}
 
 
+class Scheduler:
+    def start(self):
+        logger.info("start")
+        scheduler = BackgroundScheduler()
+        scheduler.add_job(
+            process_data,
+            "interval",
+            seconds=settings.scheduler_interval,
+        )
+        scheduler.start()
+
+
 def load_orders(path):
     try:
+        logger.info(f"{path=}")
         df = pd.read_excel(path)
     except EmptyDataError:
         logger.error(f"Файл пустой: {path}")
@@ -103,16 +119,63 @@ def calc_revenue_by_sku(df):
     return revenue
 
 
-def main():
-    logger.info("Hello world!")
+def process_data():
+    logger.info("process_data")
     try:
         df = load_orders(settings.orders_file)
+        logger.info("load_orders")
         revenue = calc_revenue_by_sku(df)
         for sku, total in revenue.items():
             logger.info(sku, total)
     except Exception as e:
         # logger.exception("")
         logger.error(e)
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Генерация отчёта по заказам",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "-f",
+        "--orders-file",
+        default=None,
+        help="Путь к файлу с заказами (xlsx)",
+    )
+    parser.add_argument(
+        "--api-url",
+        default=None,
+        help="Базовый URL API для проверки статусов",
+    )
+    parser.add_argument(
+        "--interval",
+        type=int,
+        default=None,
+        help="Интервал срабатывания планировщика",
+    )
+    args = parser.parse_args()
+
+    # Переопределяем настройки из CLI, если они переданы
+    if args.orders_file:
+        settings.orders_file = args.orders_file
+    if args.api_url:
+        settings.order_status_api_url = args.api_url
+    if args.interval:
+        settings.scheduler_interval = args.interval
+    return args
+
+
+def main():
+    logger.info("Hello world!")
+    parse_args()
+    logger.info(f"{settings.scheduler_interval=}")
+    if settings.scheduler_interval > 0:
+        Scheduler().start()
+        while True:
+            time.sleep(1)
+    else:
+        process_data()
 
 
 if __name__ == "__main__":

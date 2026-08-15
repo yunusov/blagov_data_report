@@ -16,4 +16,4 @@ rem if errorlevel 1 (
 rem    powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 rem )
 
-uv run src/main.py
+uv run python -m src.main
