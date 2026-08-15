@@ -1,0 +1,22 @@
+[project]
+name = "blagov-data-report"
+version = "0.1.0"
+description = "Тестовое задание для ИП Благов"
+readme = "README.md"
+authors = [
+    { name = "v.yunusov", email = "v300187@yandex.ru" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "loguru>=0.7.3",
+    "openpyxl>=3.1.5",
+    "pandas>=3.0.5",
+    "pydantic-settings>=2.15.0",
+    "requests>=2.34.2",
+    "tenacity>=9.1.4",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.3",
+]
