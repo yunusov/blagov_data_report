@@ -11,8 +11,8 @@ from tenacity import (
 )
 from urllib3.exceptions import NameResolutionError
 
-from utils.config import settings
-from utils.loguru_config import AppLogger
+from src.utils.config import settings
+from src.utils.loguru_config import AppLogger
 
 logger = AppLogger().get_logger()
 REQUIRED_COLUMNS = {"order_id", "sku", "price", "qty"}
@@ -82,7 +82,7 @@ def get_order_status(order_id):
         logger.error(f"Не удалось разрешить имя хоста: {exc}")
         raise
     try:
-        return resp.json()["status"]
+        return resp.json["status"]
     except (requests.exceptions.JSONDecodeError, KeyError) as exc:
         logger.error(f"Некорректный ответ API для заказа {order_id}: {exc}")
         raise
