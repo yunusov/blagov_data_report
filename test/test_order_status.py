@@ -1,9 +1,11 @@
+import json
+
 import pytest
 import requests
 from tenacity import wait_none
 
-from src import main
-from src.main import get_order_status
+from src import api, main
+from src.api import get_order_status
 
 
 @pytest.fixture(autouse=True)
@@ -27,7 +29,8 @@ def _mock_response(status_code=200, json_data=None, raise_for_status=None):
     """Создаёт мок-ответ requests.Response."""
     resp = requests.Response()
     resp.status_code = status_code
-    resp.json = json_data or {}
+    if json_data is not None:
+        resp._content = json.dumps(json_data).encode("utf-8")
     if raise_for_status:
         resp.raise_for_status = raise_for_status
     return resp
@@ -36,7 +39,7 @@ def _mock_response(status_code=200, json_data=None, raise_for_status=None):
 def test_get_order_status_success(monkeypatch, api_url):
     """Успешный ответ API возвращает статус."""
     resp = _mock_response(json_data={"status": "shipped"})
-    monkeypatch.setattr(main.requests, "get", lambda *a, **kw: resp)
+    monkeypatch.setattr(api.requests, "get", lambda *a, **kw: resp)
 
     assert get_order_status("ORD-1") == "shipped"
 
@@ -47,7 +50,7 @@ def test_get_order_status_connection_error(monkeypatch, api_url):
     def raise_conn_error(*args, **kwargs):
         raise requests.exceptions.ConnectionError("connection refused")
 
-    monkeypatch.setattr(main.requests, "get", raise_conn_error)
+    monkeypatch.setattr(api.requests, "get", raise_conn_error)
 
     with pytest.raises(requests.exceptions.ConnectionError):
         get_order_status("ORD-1")
