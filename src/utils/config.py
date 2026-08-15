@@ -19,6 +19,7 @@ class Settings(BaseConfig):
     orders_file: str = "orders.xlsx"
     scheduler_interval: int = 60
     order_status_api_url: str = ""
+    orders_for_check: str = "Реестр заказов (для сверки).xlsx"
 
 
 settings = Settings()
